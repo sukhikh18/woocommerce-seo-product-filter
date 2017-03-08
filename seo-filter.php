@@ -7,33 +7,32 @@ Author: NikolayS93
 Author URI: http://vk.com/nikolay_s93
 Text Domain: new-plugin
 Domain Path: /languages/
-Version: 0.0.1
+Version: 0.0.2
 */
 
 /**
 * 			
 */
-class ClassName //extends AnotherClass
+class GlobalClassName //extends AnotherClass
 {
 	public $option_name = 'seo-settings';
 	protected $values = false;
 
 	function __construct(){
 		$this->define_constants();
-		$this->get_includes();
+		$this->get_includes( array('dt-globals', 'widget', 'change-query') );
 
 		if( isset($_GET['tag_ID']) )
 			$this->values = get_term_meta($_GET['tag_ID'], $this->option_name, true );
 
-		if(is_admin())
+		if(is_admin()){
 			add_action('admin_init', array($this, 'add_filter_fields') );
+			add_action('admin_menu', array($this, 'add_admin_page') );
+		}
 
-		if( isset($_GET) )
-			new SEO_Filter();
+		new SEO_Filter();
 
 		add_action( 'widgets_init', array($this, 'widget_init'));
-
-
 	}
 
 	protected function get_current_taxanomy(){
@@ -73,9 +72,8 @@ class ClassName //extends AnotherClass
 		define( 'DTF_PLUGIN_URL', trailingslashit(plugins_url(basename( __DIR__ ))) );
 		define( 'DTF_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 	}
-	private function get_includes(){
+	private function get_includes($paths){
 		$ext = '.php';
-		$paths =  array('dt-globals', 'widget', 'change-query');
 		foreach ($paths as $path) {
 			$file = DTF_PLUGIN_PATH . 'includes/' . $path . $ext;
 			if( is_readable( $file ) ){
@@ -93,44 +91,87 @@ class ClassName //extends AnotherClass
 	}
 
 	// form templates
-	private function filter_fields_template($type=false, $name=false, $label=false, $desc='', $value=false){
-		if($name === false || $label == false)
-			return;
+	// private function filter_fields_template($type=false, $name=false, $label=false, $desc='', $value=false){
+	// 	if($name === false || $label == false)
+	// 		return;
+
+	// 	if($this->values){
+	// 		$val = explode('-', $name);
+	// 		$val = $val[1];
+	// 		$value = isset($this->values[$val]) ?  $this->values[$val] : '';
+	// 	}
+
+	// 	switch ($type) {
+	// 		case 'textarea':
+	// 			echo "
+	// 			<div class='form-field term-{$name}-wrap'>
+	// 				<label for='{$name}'>{$label}</label>
+	// 				<textarea name='{$name}' id='{$name}' rows='3' cols='40'>{$value}</textarea>
+	// 				{$desc}
+	// 			</div>
+	// 			";
+	// 			break;
+			
+	// 		default:
+	// 			echo "
+	// 			<div class='form-field term-{$name}-wrap'>
+	// 				<label for='{$name}'>{$label}</label>
+	// 				<input name='{$name}' id='{$name}' type='text' value='{$value}' size='40'>
+	// 				{$desc}
+	// 			</div>
+	// 			";
+	// 			break;
+	// 	}
+	// }
+	function admin_page(){
+		echo 'Hallo!';
+	}
+	function add_admin_page(){
+		add_options_page( 'Настройки фильтра таксаномий', 'Настройки фильтра', 'editor', 'filter_settings',
+			array($this, 'admin_page') );
+	}
+	function add_seo_filter_fields($taxonomy, $is_table = false) {
+		$fields = array(
+			array(
+				'id'  => 'seo-title',
+				'label' => 'Заголовок браузера',
+				'type'  => 'text'
+				),
+			array(
+				'id'  => 'seo-description',
+				'label' => 'Описание (тэг description)',
+				'type'  => 'textarea'
+				),
+			array(
+				'id'  => 'seo-keywords',
+				'label' => 'Ключевые слова',
+				'type'  => 'textarea'
+				),
+			array(
+				'id'  => 'seo-h1',
+				'label' => 'Заголовок H1',
+				'type'  => 'text'
+				),
+			// array(
+			// 	'id'  => 'seo-content',
+			// 	'label' => 'SEO контент',
+			// 	'type'  => 'textarea'
+			// 	),
+			);
+		$active = array();
 
 		if($this->values){
-			$val = explode('-', $name);
-			$val = $val[1];
-			$value = isset($this->values[$val]) ?  $this->values[$val] : '';
+			foreach ($this->values as $key => $value) {
+				$key = 'seo-'.$key;
+				$active[$key] = $value;
+			}
 		}
 
-		switch ($type) {
-			case 'textarea':
-				echo "
-				<div class='form-field term-{$name}-wrap'>
-					<label for='{$name}'>{$label}</label>
-					<textarea name='{$name}' id='{$name}' rows='3' cols='40'>{$value}</textarea>
-					{$desc}
-				</div>
-				";
-				break;
-			
-			default:
-				echo "
-				<div class='form-field term-{$name}-wrap'>
-					<label for='{$name}'>{$label}</label>
-					<input name='{$name}' id='{$name}' type='text' value='{$value}' size='40'>
-					{$desc}
-				</div>
-				";
-				break;
-		}
+		DTProjects\form_render($fields, $active, $is_table, array('<div class="form-field term-wrap">', '</div>'), false);
 	}
-	function add_seo_filter_fields($taxonomy) {
-		$this->filter_fields_template( 'text', 'seo-title', _('Заголовок браузера') );
-		$this->filter_fields_template( 'textarea', 'seo-description', _('Описание (тэг description)') );
-		$this->filter_fields_template( 'textarea', 'seo-keywords', _('Ключевые слова') );
-		$this->filter_fields_template( 'text', 'seo-h1', _('Заголовок H1') );
-		$this->filter_fields_template( 'textarea', 'seo-content', _('SEO контент') );
+	function add_table_seo_filter_fields($taxanomy){
+
+		$this->add_seo_filter_fields($taxanomy, true);
 	}
 	function save_seo_filter_fields( $term_id ){
 		$result = array();
@@ -156,16 +197,15 @@ class ClassName //extends AnotherClass
 		if($tax){
 			if(in_array($tax, $tax_attributes)){
 				add_action( $tax.'_add_form_fields', array($this, 'add_seo_filter_fields'), 10, 2 );
-				add_action( $tax.'_edit_form_fields', array($this, 'add_seo_filter_fields'), 10, 2 );
+				add_action( $tax.'_edit_form_fields', array($this, 'add_table_seo_filter_fields'), 10, 2 );
 			}
 		}
 
 		foreach ($tax_attributes as $tax) {
-			// При сохранении не удается определитьт $tax'аномию
+			// При сохранении не удается определитьт $tax'аномию, по этому создаем хук для каждой
 			add_action( 'created_'.$tax, array($this, 'save_seo_filter_fields'), 10, 2 );
 			add_action( 'edited_'.$tax,  array($this, 'save_seo_filter_fields'), 10, 2 );
 		}
 	}
 }
-
-new ClassName();
+new GlobalClassName();

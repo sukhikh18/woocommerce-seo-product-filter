@@ -2,9 +2,41 @@
 class TaxanomySeoFilter extends WP_Widget {
 
 	function __construct() {
-		// Регистрация виджета в базе WP
-		// WooCommerce Фильтр по атрибутам
+		// Регистрация виджета в базе WP - WooCommerce Фильтр по атрибутам
 		parent::__construct('TaxanomySeoFilter', 'Фильтр', array( 'description' => 'Показывает аттрибуты, которые позволяют выбирать из списков товары по атрибуту.' ));
+	}
+
+	/**
+	 * Filters
+	 */
+	function create_filters(){
+		add_filter( 'change_wc_product_taxs', array($this, 'change_factory_tax'), 10, 2 );
+		add_filter( 'change_wc_product_taxs', array($this, 'change_wc_attr_tax'), 10, 2 );
+	}
+	function change_factory_tax( $tax, $is_return=false ){
+		$cats = array( 'product_cats', 'product_cat' );
+		$tags = array( 'product_tags', 'product_tag' );
+
+		if( $is_return ){
+			if( in_array($tax, $cats) )
+				$tax = str_replace($cats[0], $cats[1], $tax);
+			else
+				$tax = str_replace($tags[0], $tags[1], $tax);
+		}
+		else {
+			if( in_array($tax, $cats) )
+				$tax = str_replace($cats[1], $cats[0], $tax);
+			else
+				$tax = str_replace($tags[1], $tags[0], $tax);
+		}
+
+		return $tax;
+	}
+	function change_wc_attr_tax( $tax, $is_return=false ){
+		if(! in_array($tax, array('product_cat', 'product_tag')) )  
+			$tax = ( $is_return === true ) ? 'pa_' . $tax : str_replace( 'pa_', '', $tax );
+
+		return $tax;
 	}
 
 	function widget_settings($submit=false){
@@ -105,39 +137,35 @@ class TaxanomySeoFilter extends WP_Widget {
 	public function widget( $args, $instance ) {
 		// title, attribute_id, logical, type..
 		extract($instance);
-
-		echo $args['before_widget'];
+		
 		if($widget == 'filter'){
 			$type = isset($type) ? $type : 'checkbox';
 			$title = apply_filters( 'widget_title', $title );
 
-			if(!isset($logical) || !isset($attribute_id)){
-				echo $args['after_widget'];
-				return false;
-			}
+			$html['title'] = ( ! empty( $title ) ) ? $args['before_title'] . $title . $args['after_title'] : '';
 
-			if ( ! empty( $title ) )
-				echo $args['before_title'] . $title . $args['after_title'];
-
-			if($attribute_id == 'product_cat'){
-				$cats = get_terms( array(
-					'taxonomy' => 'product_cat',
-					'hide_empty' => empty($show_hidden) ? true : false,
-					) );
-
-				if( sizeof($cats) < 1 )
+			// empty bugfix
+			if( $attribute_id == 'product_cat' || $attribute_id == 'product_tag' ){
+				$tax_args = ( empty($show_hidden) ) ? array() : array('hide_empty' => false);
+				if( wp_count_terms( $attribute_id, $tax_args) < 1 )
 					return false;
 			}
-
 			$result = ( empty($show_hidden) ) ? self::get_attribute_values( $attribute_id, 'id', true )
-				: self::get_attribute_values( $attribute_id ) ;
+				: self::get_attribute_values( $attribute_id );
+			
+			// is not find
+			if( sizeof( $result ) < 1 )
+				return false;
+
+			echo $args['before_widget'];
+			echo $html['title'];
 
 			$filters = array();
 			foreach ($result as $term) {
+				$show_count = true;
 				$label = (!empty($show_count)) ? $term->name . ' (' .$term->count. ')' : $term->name;
 
-				$name = str_replace('product_cat', 'product_cats', $attribute_id);
-				$name = str_replace('pa_', '', $name);
+				$name = apply_filters( 'change_wc_product_taxs', $attribute_id );
 				$name .= '[]';
 
 				$filters[] = array(
@@ -148,9 +176,17 @@ class TaxanomySeoFilter extends WP_Widget {
 					'type'  => $type
 					);
 			}
-			DTProjects\form_render($filters, $_GET, false, array('<div>', '</div>'));
+			global $wp_query;
+
+			$tax = $wp_query->get('f_tax');
+			if( $tax && $tax != 'product_cat' && $tax != 'product_tag' )
+				$tax = 'pa_'.$tax;
+			$active = ( $tax ) ? array( $tax => (int)$wp_query->get('f_term') ) : $_GET;
+
+			DTProjects\form_render($filters, $active, false, array('<div>', '</div>'));
 		}
 		else {
+			echo $args['before_widget'];
 			DTProjects\form_render(array(
 				array(
 					'type'  => 'submit',
@@ -159,7 +195,7 @@ class TaxanomySeoFilter extends WP_Widget {
 				array(
 					'type'  => 'hidden',
 					'value' => '1',
-					'name'  =>'set_filter'
+					'name'  =>'filter'
 					)
 			));
 		}
@@ -289,9 +325,6 @@ class TaxanomySeoFilter extends WP_Widget {
 
 	// Widget Backend 
 	public function form( $instance ) {
-		// echo "<pre>";
-		// var_dump($instance);
-		// echo "</pre>";
 		$form_instance = array();
 		foreach ($instance as $key => $value) {
 			$id = $this->get_field_name( $key );
