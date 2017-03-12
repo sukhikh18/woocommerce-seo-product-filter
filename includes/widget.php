@@ -1,169 +1,64 @@
 <?php
-class TaxanomySeoFilter extends WP_Widget {
+class TaxanomySeoFilterWidget extends WP_Widget {
+
+	public static $widget_id = 'TaxanomySeoFilterWidget';
 
 	function __construct() {
 		// Регистрация виджета в базе WP - WooCommerce Фильтр по атрибутам
-		parent::__construct('TaxanomySeoFilter', 'Фильтр', array( 'description' => 'Показывает аттрибуты, которые позволяют выбирать из списков товары по атрибуту.' ));
+		parent::__construct(self::$widget_id, 'Фильтр', array( 'description' => 'Показывает аттрибуты, которые позволяют выбирать из списков товары по атрибуту.' ));
+
+		add_action( 'before_sidebar', array( $this, 'sidebar_wrapper_start' ), 20 );
+		add_action( 'after_sidebar',  array( $this, 'sidebar_wrapper_end' ), 5 );
 	}
 
-	/**
-	 * Filters
-	 */
-	function create_filters(){
-		add_filter( 'change_wc_product_taxs', array($this, 'change_factory_tax'), 10, 2 );
-		add_filter( 'change_wc_product_taxs', array($this, 'change_wc_attr_tax'), 10, 2 );
+	function widget_init(){
+
+		register_widget( self::$widget_id );
 	}
-	function change_factory_tax( $tax, $is_return=false ){
-		$cats = array( 'product_cats', 'product_cat' );
-		$tags = array( 'product_tags', 'product_tag' );
+	function sidebar_wrapper_start(){
 
-		if( $is_return ){
-			if( in_array($tax, $cats) )
-				$tax = str_replace($cats[0], $cats[1], $tax);
-			else
-				$tax = str_replace($tags[0], $tags[1], $tax);
-		}
-		else {
-			if( in_array($tax, $cats) )
-				$tax = str_replace($cats[1], $cats[0], $tax);
-			else
-				$tax = str_replace($tags[1], $tags[0], $tax);
-		}
-
-		return $tax;
+		echo '<form action="'.get_permalink( woocommerce_get_page_id('shop') ).'" method="get">';
 	}
-	function change_wc_attr_tax( $tax, $is_return=false ){
-		if(! in_array($tax, array('product_cat', 'product_tag')) )  
-			$tax = ( $is_return === true ) ? 'pa_' . $tax : str_replace( 'pa_', '', $tax );
+	function sidebar_wrapper_end(){
 
-		return $tax;
-	}
-
-	function widget_settings($submit=false){
-		$tax_attributes = array();
-		$form = array();
-		// Созданные таксаномии "Атрибуты" (Без стандартных woocommerce)
-		$attribs = get_object_taxonomies('product', 'objects');
-		$default_product_type = array('product_type',
-			//'product_cat', 'product_tag',
-			'product_shipping_class');
-		if(sizeof($attribs) != 0){
-			foreach ($attribs as $attr) {
-				$attr_name = $attr->name;
-				if(! in_array($attr_name, $default_product_type) ){
-					$tax_attributes[$attr_name] = $attr->label;
-				}
-			}
-		}
-		
-		if(! $submit){
-			$form = array(
-				array(
-					'label' => 'Заголовок',
-					'data-title' => 'title',
-					'id'    => $this->get_field_id( 'title' ),
-					'name'  => $this->get_field_name( 'title' ),
-					'type'  => 'text',
-					'class' => 'widefat'
-					),
-				array(
-					'label'   => 'Аттрибут',
-					'data-title' => 'attribute_id',
-					'id'      => $this->get_field_id( 'attribute_id' ),
-					'name'    => $this->get_field_name( 'attribute_id' ),
-					'type'    =>'select',
-					'options' => $tax_attributes,
-					'class'   =>'widefat'
-					),
-				// array(
-				// 	'label'   => 'Логика',
-				// 	'data-title' => 'logical',
-				// 	'id'      => $this->get_field_id( 'logical' ),
-				// 	'name'    => $this->get_field_name( 'logical' ),
-				// 	'type'    =>'select',
-				// 	'options' => array('or' => 'OR', 'and' => 'AND'),
-				// 	'class'   =>'widefat'
-				// 	),
-				// array(
-				// 	'label'   => 'Тип фильтра',
-				// 	'data-title' => 'type',
-				// 	'id'      => $this->get_field_id( 'type' ),
-				// 	'name'    => $this->get_field_name( 'type' ),
-				// 	'type'    =>'select',
-				// 	'options' => array('select' => 'Выбор', 'checkbox' => 'Чекбокс', 'radio' => 'Радио-кнопки'),
-				// 	'class'   =>'widefat'
-				// 	),
-				// array(
-				// 	'type'    => 'checkbox',
-				// 	'label'   => 'Показывать кол-во товаров',
-				// 	'data-title' => 'show_count',
-				// 	'id'      => $this->get_field_id( 'show_count' ),
-				// 	'name'    => $this->get_field_name( 'show_count' ),
-				// 	),
-				array(
-					'type'    => 'checkbox',
-					'label'   => 'Показывать пустые аттрибуты',
-					'data-title' => 'show_hidden',
-					'id'      => $this->get_field_id( 'show_hidden' ),
-					'name'    => $this->get_field_name( 'show_hidden' ),
-					),
-				);
-		} else {
-			$form[] = array(
-				'id'    => $this->get_field_id( 'title' ),
-				'name'  => $this->get_field_name( 'title' ),
-				'type'  => 'hidden',
-				'class' => 'widefat',
-				'value' => 'Кнопка "Показать"'
-				);
-		}
-
-		$form[] = array(
-			'label'   => 'Тип виджета',
-			'data-title' => 'widget',
-			'id'      => $this->get_field_id( 'widget' ),
-			'name'    => $this->get_field_name( 'widget' ),
-			'type'    =>'select',
-			'options' => array('filter' => 'Фильтр', 'submit' => 'Кнопка фильтра продуктов'),
-			'class'  =>'widefat',
-			'before' => $submit ? '<strong>' : '<hr><strong>',
-			'after'  => '</strong>'
-			);
-
-		return $form;
+		echo '</form>';
 	}
 
 	// Widget FrontEnd
 	public function widget( $args, $instance ) {
 		// title, attribute_id, logical, type..
 		extract($instance);
-		
-		if($widget == 'filter'){
-			$type = isset($type) ? $type : 'checkbox';
-			$title = apply_filters( 'widget_title', $title );
+		$option = get_option( 'filter_settings', false );
 
-			$html['title'] = ( ! empty( $title ) ) ? $args['before_title'] . $title . $args['after_title'] : '';
+		if( $widget == 'filter' ){
+			// if not set - use default
+			$type = isset($type) ? $type : 'checkbox';
+			
+			// set widget title
+			$title = apply_filters( 'widget_title', $title );
+			$title_html = ( $title ) ? $args['before_title'] . $title . $args['after_title'] : '';
 
 			// empty bugfix
 			if( $attribute_id == 'product_cat' || $attribute_id == 'product_tag' ){
-				$tax_args = ( empty($show_hidden) ) ? array() : array('hide_empty' => false);
+				$tax_args = ( isset($option['show_hidden']) ) ? array('hide_empty' => false) : array();
 				if( wp_count_terms( $attribute_id, $tax_args) < 1 )
 					return false;
 			}
-			$result = ( empty($show_hidden) ) ? self::get_attribute_values( $attribute_id, 'id', true )
-				: self::get_attribute_values( $attribute_id );
+
+			$result = (! isset($option['show_hidden']) ) ?
+				self::get_attribute_values( $attribute_id, 'id', true ) :
+				self::get_attribute_values( $attribute_id );
 			
-			// is not find
+			// is not found
 			if( sizeof( $result ) < 1 )
 				return false;
 
 			echo $args['before_widget'];
-			echo $html['title'];
+			echo $title_html;
 
 			$filters = array();
 			foreach ($result as $term) {
-				$show_count = true;
-				$label = (!empty($show_count)) ? $term->name . ' (' .$term->count. ')' : $term->name;
+				$label = ( isset($option['show_count']) ) ? $term->name . ' (' .$term->count. ')' : $term->name;
 
 				$name = apply_filters( 'change_wc_product_taxs', $attribute_id );
 				$name .= '[]';
@@ -176,13 +71,17 @@ class TaxanomySeoFilter extends WP_Widget {
 					'type'  => $type
 					);
 			}
+
 			global $wp_query;
 
-			$tax = $wp_query->get('f_tax');
-			if( $tax && $tax != 'product_cat' && $tax != 'product_tag' )
-				$tax = 'pa_'.$tax;
-			$active = ( $tax ) ? array( $tax => (int)$wp_query->get('f_term') ) : $_GET;
+			if( $tax = apply_filters( 'change_wc_product_taxs', $wp_query->get('f_tax')) ){
+				$active = array( $tax => (int)$wp_query->get('f_term') );
+			}
+			else {
+				$active = $_GET;
+			}
 
+			// var_dump($active);
 			DTProjects\form_render($filters, $active, false, array('<div>', '</div>'));
 		}
 		else {
@@ -323,7 +222,86 @@ class TaxanomySeoFilter extends WP_Widget {
         }
     }
 
-	// Widget Backend 
+	// Widget Backend
+    function _widget_settings( $submit=false ){
+		$tax_attributes = array();
+		$form = array();
+		// Созданные таксаномии "Атрибуты" (Без стандартных woocommerce)
+		$attribs = get_object_taxonomies('product', 'objects');
+		$default_product_type = array('product_type',
+			//'product_cat', 'product_tag',
+			'product_shipping_class');
+		if(sizeof($attribs) != 0){
+			foreach ($attribs as $attr) {
+				$attr_name = $attr->name;
+				if(! in_array($attr_name, $default_product_type) ){
+					$tax_attributes[$attr_name] = $attr->label;
+				}
+			}
+		}
+		
+		if(! $submit){
+			$form = array(
+				array(
+					'label' => 'Заголовок',
+					'data-title' => 'title',
+					'id'    => $this->get_field_id( 'title' ),
+					'name'  => $this->get_field_name( 'title' ),
+					'type'  => 'text',
+					'class' => 'widefat'
+					),
+				array(
+					'label'   => 'Аттрибут',
+					'data-title' => 'attribute_id',
+					'id'      => $this->get_field_id( 'attribute_id' ),
+					'name'    => $this->get_field_name( 'attribute_id' ),
+					'type'    =>'select',
+					'options' => $tax_attributes,
+					'class'   =>'widefat'
+					),
+				// array(
+				// 	'label'   => 'Логика',
+				// 	'data-title' => 'logical',
+				// 	'id'      => $this->get_field_id( 'logical' ),
+				// 	'name'    => $this->get_field_name( 'logical' ),
+				// 	'type'    =>'select',
+				// 	'options' => array('or' => 'OR', 'and' => 'AND'),
+				// 	'class'   =>'widefat'
+				// 	),
+				// array(
+				// 	'label'   => 'Тип фильтра',
+				// 	'data-title' => 'type',
+				// 	'id'      => $this->get_field_id( 'type' ),
+				// 	'name'    => $this->get_field_name( 'type' ),
+				// 	'type'    =>'select',
+				// 	'options' => array('select' => 'Выбор', 'checkbox' => 'Чекбокс', 'radio' => 'Радио-кнопки'),
+				// 	'class'   =>'widefat'
+				// 	),
+				);
+		} else {
+			$form[] = array(
+				'id'    => $this->get_field_id( 'title' ),
+				'name'  => $this->get_field_name( 'title' ),
+				'type'  => 'hidden',
+				'class' => 'widefat',
+				'value' => 'Кнопка "Показать"'
+				);
+		}
+
+		$form[] = array(
+			'label'   => 'Тип виджета',
+			'data-title' => 'widget',
+			'id'      => $this->get_field_id( 'widget' ),
+			'name'    => $this->get_field_name( 'widget' ),
+			'type'    =>'select',
+			'options' => array('filter' => 'Фильтр', 'submit' => 'Кнопка фильтра продуктов'),
+			'class'  =>'widefat',
+			'before' => $submit ? '<strong>' : '<hr><strong>',
+			'after'  => '</strong>'
+			);
+
+		return $form;
+	}
 	public function form( $instance ) {
 		$form_instance = array();
 		foreach ($instance as $key => $value) {
@@ -331,25 +309,12 @@ class TaxanomySeoFilter extends WP_Widget {
 			$form_instance[$id] = $value;
 		}
 		$submit = (end($form_instance) == 'submit') ? true : false;
-		DTProjects\form_render($this->widget_settings($submit), $form_instance);
-		/*?>
-		<script type="text/javascript">
-			jQuery(document).ready(function($) {
-				$('[data-title="widget"]').on('select', function(){
-					if($(this).val() == 'submit'){
-						$(this).closest('.widget-content').child('p')
-					}
-					
-				});
-			});
-		</script>
-		<?*/
+		DTProjects\form_render($this->_widget_settings($submit), $form_instance);
 	}
 	public function update( $new_instance, $old_instance ) {
-		// file_put_contents( DTF_PLUGIN_PATH . 'debug.log', print_r($new_instance, 1) );
 		$instance = array();
 		if($new_instance['widget'] != 'submit'){
-			foreach ($this->widget_settings() as $value) {
+			foreach ($this->_widget_settings() as $value) {
 				$id = $value['data-title'];
 				if( isset( $new_instance[$id] ) )
 					$instance[$id] = $new_instance[$id];
@@ -358,6 +323,7 @@ class TaxanomySeoFilter extends WP_Widget {
 			$instance['widget'] = 'submit';
 		}
 
+		// file_put_contents( DTF_PLUGIN_PATH . 'debug.log', print_r($new_instance, 1) );
 		return $instance;
 	}
 }

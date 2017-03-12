@@ -1,16 +1,26 @@
 <?php
 namespace DTProjects;
 
-if(! function_exists('is_wp_debug')){
-  function is_wp_debug(){
-    if( WP_DEBUG ){
-      if( defined(WP_DEBUG_DISPLAY) && ! WP_DEBUG_DISPLAY){
-        return false;
-      }
-      return true;
+if(! function_exists('admin_page_render')){
+  function admin_page_render($field, $page_name, $active){
+    $field['name'] = $page_name . "[" . $field['id'] . "]";
+
+    if( isset($field['desc']) ){
+      $field['label'] = $field['desc'];
+      unset( $field['desc'] );
+    } else {
+      unset( $field['label'] );
     }
-    return false;
+
+    if( isset($active[$field['id']]) ){
+      if($field['type'] == 'checkbox')
+        $field['checked'] = 'checked';
+      $field['value'] = $active[$field['id']];
+    }
+
+    return $field;
   }
+  add_filter( 'dt_admin_page_render', 'DTProjects\admin_page_render', 10, 3 );
 }
 
 if(! function_exists('form_render')){
@@ -22,7 +32,7 @@ if(! function_exists('form_render')){
     $form_wrap = array('<table class="table form-table"><tbody>', '</tbody></table>', 'th'),
     $is_not_echo = false){
     $html = array();
-    if(empty($render) )
+    if( empty($render) )
       return false;
 
     if(! isset($item_wrap[1]) )
@@ -74,7 +84,11 @@ if(! function_exists('form_render')){
                 $checked = 'checked';
             }
           }
-          
+          if(! isset($input['value']) )
+            $input['value'] = 'on';
+
+          // ["product_cats"]=> 8
+
           unset($input['default']);
 
           if(isset( $input['data-clear']) && $input['data-clear'] == 'true' )
@@ -88,11 +102,7 @@ if(! function_exists('form_render')){
             $val  = esc_attr($val);
             $input_html .= " {$attr}='{$val}'";
           }
-          
-          if(! isset($input['value']))
-            $input_html .= " value='on'>";
-          else
-            $input_html .= " value='{$input['value']}'>";
+          $input_html .= ">";
 
           if(!$is_table && $label)
             $input_html .= "<label for='{$input['id']}'> {$label} </label>";
