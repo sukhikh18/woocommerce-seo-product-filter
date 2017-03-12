@@ -26,7 +26,6 @@ class SEO_Filter extends DTFilter
 					exit();
 				}
 			}
-			var_dump(self::$taxquery[0]['terms']);
 		}
 	}
 
@@ -145,7 +144,7 @@ class SEO_Filter extends DTFilter
 		add_rewrite_tag('%seo_filter%', '([^&]+)');
 
 		$tax = 'id';
-		$tax_reg = ($tax == 'id') ? '([0-9,]{1,})' : '([a-z]+)';
+		$tax_reg = ($tax == 'id') ? '([0-9]{1,})' : '([a-z]+)';
 
 		// shop/filter/tax/term/ to wp_redirect( home_url() || 404 );
 		add_rewrite_rule( $shop_slug . '/filter/([a-z_1-9]+)/' . $tax_reg . '/?$', 'index.php?post_type=product&seo_filter=1&f_tax=$matches[1]&f_term=$matches[2]', 'top' );
