@@ -11,7 +11,7 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 		add_action( 'after_sidebar',  array( $this, 'sidebar_wrapper_end' ), 5 );
 	}
 
-	function widget_init(){
+	static function widget_init(){
 
 		register_widget( self::$widget_id );
 	}

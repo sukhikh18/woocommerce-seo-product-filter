@@ -9,13 +9,14 @@ class SEO_Filter extends DTFilter
 
 	function __construct()
 	{
-		
+		add_action( 'init', array($this, 'addRoutes') );
+
 		add_action( 'pre_get_posts', array($this, 'create_filters') );
 		add_action( 'pre_get_posts', array($this, 'set_taxquery') );
 		add_action( 'pre_get_posts', array($this, '_redirect') );
 		add_action( 'pre_get_posts', array($this, 'set_query') );
-		add_action( 'init', array($this, 'set_seo_field_values') );
-		add_action( 'init', array($this, 'addRoutes') );
+		add_action( 'pre_get_posts', array($this, 'set_seo_field_values') );
+		
 	}
 
 	function _redirect( $query ){
@@ -102,8 +103,8 @@ class SEO_Filter extends DTFilter
 			$query->set( 'tax_query', self::$taxquery );
 	}
 
-	function set_seo_field_values(){
-			if( sizeof(self::$taxquery) != 1 || sizeof(self::$taxquery[0]['terms']) != 1 )
+	function set_seo_field_values(  $query ){
+			if( !$query->is_main_query() || sizeof(self::$taxquery) != 1 || sizeof(self::$taxquery[0]['terms']) != 1 )
 				return false;
 
 			$settings = self::$seo_field_values = get_term_meta( (int)self::$taxquery[0]['terms'][0], DTF_OPTION_NAME, true );
