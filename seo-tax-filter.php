@@ -1,17 +1,17 @@
 <?php
 /*
-Plugin Name: SEO FILTER
+Plugin Name: Seo Filter
 Plugin URI: 
 Description: 
 Author: NikolayS93
 Author URI: http://vk.com/nikolay_s93
 Text Domain: new-plugin
 Domain Path: /languages/
-Version: 0.3a
+Version: 0.4a
 */
 
 /**
-* 			
+*
 */
 class DTFilter //extends AnotherClass
 {

@@ -16,21 +16,21 @@ class SEO_Filter extends DTFilter
 		add_action( 'pre_get_posts', array($this, '_redirect') );
 		add_action( 'pre_get_posts', array($this, 'set_query') );
 		add_action( 'pre_get_posts', array($this, 'set_seo_field_values') );
-		
 	}
 
 	function _redirect( $query ){
 		if( $query->is_main_query() ){
 			if( sizeof(self::$taxquery) == 1 && sizeof(self::$taxquery[0]['terms']) == 1 ){
 				if(! $query->get('seo_filter')){
-					wp_redirect( '/shop/filter/'. self::$taxquery[0]['taxonomy'] .'/'.self::$taxquery[0]['terms'][0], 302 );
+					$tax = apply_filters( 'change_wc_product_taxs', self::$taxquery[0]['taxonomy'] );
+					wp_redirect( '/shop/filter/'. $tax .'/'.self::$taxquery[0]['terms'][0], 302 );
 					exit();
 				}
 			}
 		}
 	}
 
-		/**
+	/**
 	 * Filters
 	 */
 	function create_filters( $query ){
@@ -59,9 +59,17 @@ class SEO_Filter extends DTFilter
 		return $tax;
 	}
 	function change_wc_attr_tax( $tax, $is_return=false ){
-		if(! in_array($tax, array('product_cat', 'product_tag')) )  
-			$tax = ( $is_return === true ) ? 'pa_' . $tax : str_replace( 'pa_', '', $tax );
+		if( !$tax )
+			return false;
 
+		if(! in_array($tax, array('product_cat', 'product_tag', 'product_cats', 'product_tags')) ){
+			if( $is_return && !preg_match("/^pa_/", $tax) )
+				$tax = 'pa_' . $tax;
+			elseif ( !$is_return && preg_match("/^pa_/", $tax) )
+				$tax = str_replace( 'pa_', '', $tax );
+		}
+
+		//var_dump($tax);
 		return $tax;
 	}
 	/**
@@ -69,8 +77,10 @@ class SEO_Filter extends DTFilter
 	 */
 	function set_terms_filter($tax, $value){
 		$value = is_array($value) ? $value : array($value);
+		// todo: give choose
+		self::$taxquery['relation'] = 'OR';
 		self::$taxquery[] = array(
-			'taxonomy' => apply_filters( 'change_wc_product_taxs', $tax, true ),
+			'taxonomy' => $tax, //apply_filters( 'change_wc_product_taxs', , true ),
 			'field' => 'id',
 			'terms' => $value
 			);
@@ -80,18 +90,25 @@ class SEO_Filter extends DTFilter
 			// if one term filtred
 			if( $query->get('seo_filter') ){
 				if( $query->get('f_tax') && $query->get('f_term') )
-					$this->set_terms_filter( $query->get('f_tax'), $query->get('f_term') );
+					$this->set_terms_filter( apply_filters( 'change_wc_product_taxs', $query->get('f_tax'), true ),
+						$query->get('f_term') );
 			}
 			elseif( isset($_GET['filter']) && sizeof($_GET) > 1 ){
+				// все атрибуты, категории и тэги
 				$default_product_type = array('product_type', 'product_shipping_class');
 				$tax_attributes = array_diff(get_object_taxonomies('product'), $default_product_type);
 
 				foreach ($_GET as $tax => $term_id_or_ids) {
-					if($tax != 'filter'){
-						foreach ( $tax_attributes as $attr ) {
-							if( $tax == apply_filters( 'change_wc_product_taxs', $attr ) )
-								$this->set_terms_filter($tax, $term_id_or_ids);
-						}
+					$tax = apply_filters( 'change_wc_product_taxs', $tax, true );
+					//var_dump($tax);
+					if( in_array($tax, $tax_attributes) ){ // $tax != 'pa_filter' &&
+						$this->set_terms_filter($tax, $term_id_or_ids);
+						// foreach ( $tax_attributes as $attr ) {
+						// 	if( $tax = apply_filters( 'change_wc_product_taxs', $tax, true ) == $attr ){
+						// 		var_dump($tax);
+						// 		$this->set_terms_filter($tax, $term_id_or_ids);
+						// 	}
+						// }
 					}
 				}
 			}
@@ -99,8 +116,10 @@ class SEO_Filter extends DTFilter
 	}
 
 	function set_query( $query ){
-		if ( $query->is_main_query() )
+		if ( $query->is_main_query() ){
+			// _dump(self::$taxquery);
 			$query->set( 'tax_query', self::$taxquery );
+		}
 	}
 
 	function set_seo_field_values(  $query ){
