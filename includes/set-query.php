@@ -19,8 +19,8 @@ class SEO_Filter extends DTFilter
 	}
 
 	function _redirect( $query ){
-		if( $query->is_main_query() ){
-			if( sizeof(self::$taxquery) == 1 && sizeof(self::$taxquery[0]['terms']) == 1 ){
+		if( $query->is_main_query() && !is_admin() ){
+			if( ! isset(self::$taxquery[1]) && isset(self::$taxquery[0]['terms']) && sizeof(self::$taxquery[0]['terms']) == 1 ){
 				if(! $query->get('seo_filter')){
 					$tax = apply_filters( 'change_wc_product_taxs', self::$taxquery[0]['taxonomy'] );
 					wp_redirect( '/shop/filter/'. $tax .'/'.self::$taxquery[0]['terms'][0], 302 );
@@ -157,7 +157,7 @@ class SEO_Filter extends DTFilter
 
 	// seo urls
 	function addRoutes() {
-		$shop_slug = get_post_field( 'post_name', woocommerce_get_page_id('shop') );
+		$shop_slug = get_post_field( 'post_name', wc_get_page_id('shop') );
 
 		add_rewrite_tag('%f_tax%',  '([^&]+)');
 		add_rewrite_tag('%f_term%', '([^&]+)');

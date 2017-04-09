@@ -1,27 +1,23 @@
 <?php
 /*
-Plugin Name: Seo Filter
-Plugin URI: 
-Description: 
+Plugin Name: WP Seo Tax Filter
+Plugin URI: https://github.com/nikolays93/wp-wc-attr-filter
+Description: New plug-in
 Author: NikolayS93
 Author URI: http://vk.com/nikolay_s93
 Text Domain: new-plugin
 Domain Path: /languages/
-Version: 0.4a
+Version: 1.0b
 */
 
-/**
-*
-*/
-class DTFilter //extends AnotherClass
-{
+class DTFilter {
 	function __construct(){
 		$this->define_constants();
-		$this->get_includes( array('dt-form-render', 'widget', 'set-query') );
+		$this->get_includes( array('class-form-render', 'widget', 'set-query') );
 		if( is_admin() ){
-			$this->get_includes( array( 'admin-tax-fields', 'callback-page' ) );
-			new DTFilterFields();
-			new admin_callback_page();
+			$this->get_includes( array( 'class-admin-page', 'admin-tax-fields' ) );
+			// new DTFilterFields();
+			// new admin_callback_page();
 		}
 
 		add_action( 'widgets_init',   array( 'TaxanomySeoFilterWidget', 'widget_init' ) );
@@ -35,18 +31,6 @@ class DTFilter //extends AnotherClass
 		define( 'DTF_OPTION_NAME', 'filter-options');
 		define( 'DTF_PLUGIN_URL', trailingslashit(plugins_url(basename( __DIR__ ))) );
 		define( 'DTF_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
-	}
-	protected function get_current_admin_taxanomy(){
-		if(isset($_GET['taxonomy']))
-			return $_GET['taxonomy'];
-
-		if(function_exists('get_current_screen')){
-			$screen = get_current_screen();
-			if( isset( $screen->taxonomy ) )
-				return $screen->taxonomy;
-		}
-		
-		return false;
 	}
 	function show_admin_notice(){
 		if(sizeof($this->errors) == 0)

@@ -3,6 +3,9 @@
 todo:
 - give choose relation
 - can choose tax or meta
+- add filter type
+- add range data type
+- add can use ajax
 
 issues:
-- can't update taxanomy. (Only create)
+V can't update taxanomy. (Only create)

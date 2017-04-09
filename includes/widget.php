@@ -17,7 +17,7 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 	}
 	function sidebar_wrapper_start(){
 
-		echo '<form action="'.get_permalink( woocommerce_get_page_id('shop') ).'" method="get">';
+		echo '<form action="'.get_permalink( wc_get_page_id('shop') ).'" method="get">';
 	}
 	function sidebar_wrapper_end(){
 
@@ -82,11 +82,11 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 			}
 
 			// var_dump($active);
-			DTProjects\form_render($filters, $active, false, array('<div>', '</div>'));
+			DTFilter\DTForm::render($filters, $active);
 		}
 		else {
 			echo $args['before_widget'];
-			DTProjects\form_render(array(
+			DTFilter\DTForm::render(array(
 				array(
 					'type'  => 'submit',
 					'value' => 'Показать'
@@ -100,6 +100,7 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 		}
 		echo $args['after_widget'];
 	}
+	
 	public static function get_attribute_values( $taxonomy = '', $order_by = 'id', $hide_empty = false ) {
         if ( ! $taxonomy ) return array();
         $re = array();
@@ -309,7 +310,7 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 			$form_instance[$id] = $value;
 		}
 		$submit = (end($form_instance) == 'submit') ? true : false;
-		DTProjects\form_render($this->_widget_settings($submit), $form_instance);
+		DTFilter\DTForm::render($this->_widget_settings($submit), $form_instance);
 	}
 	public function update( $new_instance, $old_instance ) {
 		$instance = array();
