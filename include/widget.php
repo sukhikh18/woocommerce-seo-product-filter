@@ -3,8 +3,6 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
     const WIDGET_ID = __CLASS__;
 
-	public static $widget_id = 'TaxanomySeoFilterWidget';
-
 	function __construct()
     {
 		// Регистрация виджета в базе WP
@@ -32,50 +30,57 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 	// Widget FrontEnd
 	public function widget( $args, $instance ) {
 		// title, attribute_id, logical, type..
-        var_dump( $instance );
-		extract($instance);
+        // file_put_contents( __DIR__ . '/debug.log' , print_r($instance, 1) );
         $filter = Seo_Product_Filter::get_instance();
         $option = $filter::get_options();
 
-		if( $widget == 'filter' ){
-			// if not set - use default
-			$type = isset($type) ? $type : 'checkbox';
+        $instance = wp_parse_args( $instance, array(
+            'title'  => '',
+            'attribute_id' => '',
+            'widget' => 'filter',
+            'type'   => 'checkbox',
+        ) );
 
+        $result = array();
+
+        $result[] = $args['before_widget'];
+		if( 'filter' === $instance['widget'] ){
 			// set widget title
-			$title = apply_filters( 'widget_title', $title );
-			$title_html = ( $title ) ? $args['before_title'] . $title . $args['after_title'] : '';
+			$title = apply_filters( 'widget_title', $instance['title'] );
+            if( $title ) {
+                $result[] = $args['before_title'] . $title . $args['after_title'];
+            }
 
 			// empty bugfix
-			if( $attribute_id == 'product_cat' || $attribute_id == 'product_tag' ){
-				$tax_args = ( isset($option['show_hidden']) ) ? array('hide_empty' => false) : array();
-				if( wp_count_terms( $attribute_id, $tax_args) < 1 )
+			if( in_array($instance['attribute_id'], array('product_cat', 'product_tag')) ){
+				$tax_args = isset( $option['show_hidden'] ) ? array('hide_empty' => false) : array();
+				if( wp_count_terms( $attribute_id, $tax_args ) < 1 ) {
 					return false;
+                }
 			}
 
-			$result = (! isset($option['show_hidden']) ) ?
-				self::get_attribute_values( $attribute_id, 'id', true ) :
-				self::get_attribute_values( $attribute_id );
+			$terms = ( ! isset( $option['show_hidden'] ) ) ?
+				self::get_attribute_values( $instance['attribute_id'], 'id', true ) :
+				self::get_attribute_values( $instance['attribute_id'] );
 
 			// is not found
-			if( sizeof( $result ) < 1 )
+			if( sizeof( $terms ) < 1 ) {
 				return false;
-
-			echo $args['before_widget'];
-			echo $title_html;
+            }
 
 			$filters = array();
-			foreach ($result as $term) {
+			foreach ($terms as $term) {
 				$label = ( isset($option['show_count']) ) ? $term->name . ' (' .$term->count. ')' : $term->name;
 
-				$name = apply_filters( 'change_wc_product_taxs', $attribute_id );
+				$name = apply_filters( 'change_wc_product_taxs', $instance['attribute_id'] );
 				$name .= '[]';
 
 				$filters[] = array(
-					'id'  => $term->slug,
-					'name' =>  $name,
+					'id'    => $term->slug,
+					'name'  => $name,
 					'value' => $term->term_id,
 					'label' => $label,
-					'type'  => $type
+					'type'  => $instance['type'],
 					);
 			}
 
@@ -88,12 +93,13 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 				$active = $_GET;
 			}
 
-			// var_dump($active);
+            ob_start();
 			DTFilter\DTForm::render($filters, $active);
+            $result[] = ob_get_clean();
 		}
 		else {
-			echo $args['before_widget'];
-			DTFilter\DTForm::render(array(
+            ob_start();
+			DTFilter\DTForm::render( array(
 				array(
 					'type'  => 'submit',
 					'value' => 'Показать'
@@ -103,9 +109,12 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 					'value' => '1',
 					'name'  =>'filter'
 					)
-			));
+			) );
+            $result[] = ob_get_clean();
 		}
-		echo $args['after_widget'];
+		$result[] = $args['after_widget'];
+
+        echo implode("\r\n", $result);
 	}
 
 	public static function get_attribute_values( $taxonomy = '', $order_by = 'id', $hide_empty = false ) {
@@ -123,6 +132,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
                     'hide_empty' => false,
                 );
                 $re = get_terms( $taxonomy, $args );
+                if( sizeof($re) < 1 ) return;
                 global $wpdb;
                 $meta_query = WC_Query::get_main_meta_query();
                 $args      = $wp_the_query->query_vars;

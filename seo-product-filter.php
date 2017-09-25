@@ -7,7 +7,7 @@ Author: NikolayS93
 Author URI: http://vk.com/nikolay_s93
 Text Domain: new-plugin
 Domain Path: /languages/
-Version: 1.0b
+Version: 1.1b
 */
 
 if ( ! defined( 'ABSPATH' ) )
@@ -27,7 +27,7 @@ class Seo_Product_Filter {
         self::define_constants();
 
         $includes = apply_filters( 'seo_product_filter_includes', array(
-            'admin' => array( 'libs/class-admin-page', 'admin-tax-fields' ),
+            'admin' => array( 'libs/class-admin-page', 'admin-taxanomy-fields' ),
             'public' => array( 'libs/class-form-render', 'widget', 'set-query' ),
             ) );
 
@@ -37,7 +37,7 @@ class Seo_Product_Filter {
         self::include_required_files( $includes['public'] );
 
         add_action( 'widgets_init',   array( 'Seo_Product_Filter_Widget', 'register_widget' ) );
-        // new SEO_Filter();
+        new Seo_Product_Filter_Query();
     }
 
     public static function get_instance()
