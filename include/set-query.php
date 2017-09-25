@@ -2,8 +2,10 @@
 /**
 * 
 */
-class SEO_Filter extends DTFilter
+class SEO_Filter
+// extends DTFilter
 {
+
 	static public $taxquery = array();
 	static public $seo_field_values = array();
 

@@ -1,20 +1,25 @@
 <?php
-class TaxanomySeoFilterWidget extends WP_Widget {
+class Seo_Product_Filter_Widget extends WP_Widget {
+
+    const WIDGET_ID = __CLASS__;
 
 	public static $widget_id = 'TaxanomySeoFilterWidget';
 
-	function __construct() {
-		// Регистрация виджета в базе WP - WooCommerce Фильтр по атрибутам
-		parent::__construct(self::$widget_id, 'Фильтр', array( 'description' => 'Показывает аттрибуты, которые позволяют выбирать из списков товары по атрибуту.' ));
+	function __construct()
+    {
+		// Регистрация виджета в базе WP
+		parent::__construct(self::WIDGET_ID, 'Фильтр', array(
+            'description' => 'SEO-оптимизированный Фильтр WooCommerce'
+        ) );
 
 		add_action( 'before_sidebar', array( $this, 'sidebar_wrapper_start' ), 20 );
 		add_action( 'after_sidebar',  array( $this, 'sidebar_wrapper_end' ), 5 );
 	}
 
-	static function widget_init(){
-
-		register_widget( self::$widget_id );
+	static function register_widget(){
+		register_widget( self::WIDGET_ID );
 	}
+
 	function sidebar_wrapper_start(){
 
 		echo '<form action="'.get_permalink( wc_get_page_id('shop') ).'" method="get">';
@@ -27,13 +32,15 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 	// Widget FrontEnd
 	public function widget( $args, $instance ) {
 		// title, attribute_id, logical, type..
+        var_dump( $instance );
 		extract($instance);
-		$option = get_option( 'filter_settings', false );
+        $filter = Seo_Product_Filter::get_instance();
+        $option = $filter::get_options();
 
 		if( $widget == 'filter' ){
 			// if not set - use default
 			$type = isset($type) ? $type : 'checkbox';
-			
+
 			// set widget title
 			$title = apply_filters( 'widget_title', $title );
 			$title_html = ( $title ) ? $args['before_title'] . $title . $args['after_title'] : '';
@@ -48,7 +55,7 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 			$result = (! isset($option['show_hidden']) ) ?
 				self::get_attribute_values( $attribute_id, 'id', true ) :
 				self::get_attribute_values( $attribute_id );
-			
+
 			// is not found
 			if( sizeof( $result ) < 1 )
 				return false;
@@ -100,7 +107,7 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 		}
 		echo $args['after_widget'];
 	}
-	
+
 	public static function get_attribute_values( $taxonomy = '', $order_by = 'id', $hide_empty = false ) {
         if ( ! $taxonomy ) return array();
         $re = array();
@@ -240,7 +247,7 @@ class TaxanomySeoFilterWidget extends WP_Widget {
 				}
 			}
 		}
-		
+
 		if(! $submit){
 			$form = array(
 				array(
