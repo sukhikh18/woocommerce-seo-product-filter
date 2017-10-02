@@ -31,9 +31,9 @@ class Seo_Product_Filter_Query {
 		$tax_reg = ($tax === 'id') ? '([0-9]{1,})' : '([a-z]+)';
 
 		// shop/filter/tax/term/ to wp_redirect( home_url() || 404 );
-		add_rewrite_rule( $shop_slug . '/filter/([a-z_1-9]+)/' . $tax_reg . '/?$', 'index.php?post_type=product&seo_filter=1&f_tax=$matches[1]&f_term=$matches[2]', 'top' );
+		add_rewrite_rule( $shop_slug . '/filter/([a-z0-9-]+)/' . $tax_reg . '/?$', 'index.php?post_type=product&seo_filter=1&f_tax=$matches[1]&f_term=$matches[2]', 'top' );
 
-		add_rewrite_rule( $shop_slug . '/filter/([a-z_1-9]+)/' . $tax_reg . '/page/([0-9]{1,})/?$', 'index.php?post_type=product&seo_filter=1&f_tax=$matches[1]&f_term=$matches[2]&paged=$matches[3]', 'top' );
+		add_rewrite_rule( $shop_slug . '/filter/([a-z0-9-]+)/' . $tax_reg . '/page/([0-9]{1,})/?$', 'index.php?post_type=product&seo_filter=1&f_tax=$matches[1]&f_term=$matches[2]&paged=$matches[3]', 'top' );
 	}
 
 	public static function _redirect( $query )
