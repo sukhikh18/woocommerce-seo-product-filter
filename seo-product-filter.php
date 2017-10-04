@@ -13,75 +13,22 @@ Version: 1.1b
 if ( ! defined( 'ABSPATH' ) )
   exit; // disable direct access
 
-class Seo_Product_Filter {
-    const OPTION = __CLASS__;
-    const INCLUDE_DIR = 'include';
+define('SEO_FILTER_MARK', 'seo_filter');
 
-    private static $instance;
-    private static $options;
+// $plugin_url = trailingslashit(plugins_url(basename( __DIR__ )));
+add_action( 'plugins_loaded', 'initialize_seo_product_filter_plugin' );
+function initialize_seo_product_filter_plugin() {
+    $path = rtrim(plugin_dir_path( __FILE__ ), '/');
 
-    private function __clone(){}
-    private function __wakeup(){}
-    private function __construct()
-    {
-        self::define_constants();
-
-        $includes = apply_filters( 'seo_product_filter_includes', array(
-            'admin' => array( 'libs/class-admin-page', 'admin-taxanomy-fields' ),
-            'public' => array( 'libs/class-form-render', 'widget', 'set-query' ),
-            ) );
-
-        if( is_admin() && isset( $includes['admin'] ) ) {
-            self::include_required_files( $includes['admin'] );
-        }
-        self::include_required_files( $includes['public'] );
-
-        add_action( 'widgets_init',   array( 'Seo_Product_Filter_Widget', 'register_widget' ) );
-        new Seo_Product_Filter_Query();
+    if( is_admin() ) {
+        // require_once( $path . '/includes/libs/class-admin-page.php' );
+        require_once( $path . '/includes/admin-taxanomy-fields.php' );
     }
 
-    public static function get_instance()
-    {
-        if ( ! self::$instance ) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
+    require_once( $path . '/includes/libs/class-form-render.php' );
+    require_once( $path . '/includes/set-query.php' );
+    require_once( $path . '/includes/widget.php' );
 
-    public static function get_options()
-    {
-        if( ! self::$options ) {
-            self::$options = get_option( self::OPTION, array() );
-        }
-
-        return self::$options;
-    }
-
-    private static function define_constants()
-    {
-        define( 'DTF_PLUGIN_URL', trailingslashit(plugins_url(basename( __DIR__ ))) );
-        define( 'DTF_PLUGIN_PATH', rtrim(plugin_dir_path( __FILE__ ), '/') );
-    }
-
-    private static function include_required_files($paths, $ext = '.php')
-    {
-        if( ! is_array($paths) ) {
-            return false;
-        }
-
-        foreach ($paths as $path) {
-            $file = DTF_PLUGIN_PATH . '/' . self::INCLUDE_DIR . '/' . $path . $ext;
-            if( is_readable( $file ) ){
-                require_once( $file );
-            }
-            else {
-                error_log('Файл ('. $path . $ext .') поврежден.');
-            }
-        }
-    }
+    add_action( 'widgets_init', array( 'Seo_Product_Filter_Widget', 'register_widget' ) );
+    new Seo_Product_Filter_Query();
 }
-add_filter( 'plugins_loaded', array('Seo_Product_Filter', 'get_instance') );
-
-// Get Options
-// $filter = Seo_Product_Filter::get_instance();
-// $options = $filter::get_options();

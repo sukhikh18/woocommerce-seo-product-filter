@@ -30,9 +30,9 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 	// Widget FrontEnd
 	public function widget( $args, $instance ) {
 		// title, attribute_id, logical, type..
-        // file_put_contents( __DIR__ . '/debug.log' , print_r($instance, 1) );
-        $filter = Seo_Product_Filter::get_instance();
-        $option = $filter::get_options();
+        $option = array();
+        $option['show_hidden'] = true;
+        $option['show_count']  = true;
 
         $instance = wp_parse_args( $instance, array(
             'title'  => '',
@@ -108,7 +108,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 				array(
 					'type'  => 'hidden',
 					'value' => '1',
-					'name'  =>'filter'
+					'name'  => 'filter',
 					)
 			) );
             $result[] = ob_get_clean();
