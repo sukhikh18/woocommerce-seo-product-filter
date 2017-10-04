@@ -29,7 +29,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
 	// Widget FrontEnd
 	public function widget( $args, $instance ) {
-		// title, attribute_id, logical, type..
+		// title, attribute_id, relation, type..
         $option = array();
         $option['show_hidden'] = true;
         $option['show_count']  = true;
@@ -37,6 +37,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
         $instance = wp_parse_args( $instance, array(
             'title'  => '',
             'attribute_id' => '',
+            'relation' => 'OR',
             'widget' => 'filter',
             'type'   => 'checkbox',
         ) );
@@ -46,8 +47,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
         $result[] = $args['before_widget'];
 		if( 'filter' === $instance['widget'] ){
 			// set widget title
-			$title = apply_filters( 'widget_title', $instance['title'] );
-            if( $title ) {
+            if( $title = apply_filters( 'widget_title', $instance['title'] ) ) {
                 $result[] = $args['before_title'] . $title . $args['after_title'];
             }
 
@@ -72,7 +72,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 			foreach ($terms as $term) {
 				$label = ( isset($option['show_count']) ) ? $term->name . ' (' .$term->count. ')' : $term->name;
 
-				$name = apply_filters( 'change_wc_product_taxs', $instance['attribute_id'] );
+				$name = $instance['attribute_id'];
 				$name .= '[]';
 
 				$filters[] = array(
@@ -86,9 +86,8 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
 			global $wp_query;
 
-			if( $tax = $wp_query->get('f_tax') ){
-                // ID only
-				$active = array( $tax => (int)$wp_query->get('f_term') );
+			if( $tax = $wp_query->get( Seo_Product_Filter_Query::TAX ) ){
+				$active = array( $tax => (int)$wp_query->get( Seo_Product_Filter_Query::TERM ) );
 			}
 			else {
 				$active = $_GET;
@@ -252,9 +251,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 		$form = array();
 		// Созданные таксаномии "Атрибуты" (Без стандартных woocommerce)
 		$attribs = get_object_taxonomies('product', 'objects');
-		$default_product_type = array('product_type',
-			//'product_cat', 'product_tag',
-			'product_shipping_class');
+		$default_product_type = array('product_type', 'product_shipping_class');
 		if(sizeof($attribs) != 0){
 			foreach ($attribs as $attr) {
 				$attr_name = $attr->name;
@@ -283,15 +280,15 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 					'options' => $tax_attributes,
 					'class'   =>'widefat'
 					),
-				// array(
-				// 	'label'   => 'Логика',
-				// 	'data-title' => 'logical',
-				// 	'id'      => $this->get_field_id( 'logical' ),
-				// 	'name'    => $this->get_field_name( 'logical' ),
-				// 	'type'    =>'select',
-				// 	'options' => array('or' => 'OR', 'and' => 'AND'),
-				// 	'class'   =>'widefat'
-				// 	),
+				array(
+					'label'   => 'Логика',
+					'data-title' => 'relation',
+					'id'      => $this->get_field_id( 'relation' ),
+					'name'    => $this->get_field_name( 'relation' ),
+					'type'    =>'select',
+					'options' => array('OR' => __('OR'), 'AND' => __('AND') ),
+					'class'   =>'widefat'
+					),
 				// array(
 				// 	'label'   => 'Тип фильтра',
 				// 	'data-title' => 'type',

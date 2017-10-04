@@ -8,6 +8,7 @@ class Seo_Product_Filter_Query {
 
 	static public  $shop_slug = 'shop';
 	static private $taxquery = array();
+	static private $taxquery_and = array();
 	static private $seo_field_values = array();
 
 	function __construct()
@@ -66,7 +67,12 @@ class Seo_Product_Filter_Query {
 			return false;
 		}
 
-		if( sizeof(self::$taxquery[0]['terms']) > 1 ) {
+		if( isset(self::$taxquery_and[1]) || ! isset(self::$taxquery_and[0]['terms']) ) {
+			return false;
+		}
+
+		$summary = sizeof(self::$taxquery[0]['terms']) + sizeof(self::$taxquery_and[0]['terms']);
+		if( $summary > 1 ) {
 			return false;
 		}
 
@@ -79,15 +85,34 @@ class Seo_Product_Filter_Query {
 			$value = array($value);
 		}
 
-		/**
-		 * @todo: give choose relation
-		 */
-		self::$taxquery['relation'] = 'OR';
-		self::$taxquery[] = array(
-			'taxonomy' => self::change_taxanomy_names($tax, 1),
+		$tax = self::change_taxanomy_names($tax, 1);
+
+		$widget_settings = get_option( 'widget_seo_product_filter_widget', array() );
+		$relation = 'OR';
+		foreach ($widget_settings as $setting) {
+			if( ! isset($setting['attribute_id']) )
+				continue;
+
+			if( $tax === $setting['attribute_id'] && isset($setting['relation']) ) {
+				$relation = $setting['relation'];
+				break;
+			}
+		}
+
+		$tax_query = array(
+			'taxonomy' => $tax,
 			'field' => 'id',
 			'terms' => $value
 		);
+
+		if( 'AND' === $relation ) {
+			self::$taxquery_and['relation'] = $relation;
+			self::$taxquery_and[] = $tax_query;
+		}
+		else {
+			self::$taxquery['relation'] = $relation;
+			self::$taxquery[] = $tax_query;
+		}
 	}
 
 	static function set_taxquery( $query )
@@ -167,7 +192,13 @@ class Seo_Product_Filter_Query {
 		 * Используем фильтр только для главного, публичного запроса
 		 */
 		if ( $query->is_main_query() && ! is_admin() ){
-			$query->set( 'tax_query', self::$taxquery );
+			$tax_query = self::$taxquery;
+			if( sizeof(self::$taxquery_and) >= 1 ) {
+				array_push(self::$taxquery_and, self::$taxquery);
+				$tax_query = self::$taxquery_and;
+			}
+
+			$query->set( 'tax_query', $tax_query );
 		}
 	}
 
