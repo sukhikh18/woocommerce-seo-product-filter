@@ -54,7 +54,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 			// empty bugfix
 			if( in_array($instance['attribute_id'], array('product_cat', 'product_tag')) ){
 				$tax_args = isset( $option['show_hidden'] ) ? array('hide_empty' => false) : array();
-				if( wp_count_terms( $attribute_id, $tax_args ) < 1 ) {
+				if( wp_count_terms( $instance['attribute_id'], $tax_args ) < 1 ) {
 					return false;
                 }
 			}
@@ -86,7 +86,8 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
 			global $wp_query;
 
-			if( $tax = apply_filters( 'change_wc_product_taxs', $wp_query->get('f_tax')) ){
+			if( $tax = $wp_query->get('f_tax') ){
+                // ID only
 				$active = array( $tax => (int)$wp_query->get('f_term') );
 			}
 			else {
@@ -154,19 +155,24 @@ class Seo_Product_Filter_Widget extends WP_Widget {
                 // Generate query
                 $query           = array();
                 $query['select'] = "SELECT COUNT( DISTINCT {$wpdb->posts}.ID ) as term_count, terms.term_id as term_count_id";
+
                 $query['from']   = "FROM {$wpdb->posts}";
+
                 $query['join']   = "
                     INNER JOIN {$wpdb->term_relationships} AS term_relationships ON {$wpdb->posts}.ID = term_relationships.object_id
                     INNER JOIN {$wpdb->term_taxonomy} AS term_taxonomy USING( term_taxonomy_id )
                     INNER JOIN {$wpdb->terms} AS terms USING( term_id )
                     " . $tax_query_sql['join'] . $meta_query_sql['join'];
+
                 $query['where']   = "
                     WHERE {$wpdb->posts}.post_type IN ( 'product' )
                     AND {$wpdb->posts}.post_status = 'publish'
                     " . $tax_query_sql['where'] . $meta_query_sql['where'] . "
                     AND terms.term_id IN (" . implode( ',', array_map( 'absint', $term_ids ) ) . ")
                 ";
+
                 $query['group_by'] = "GROUP BY terms.term_id";
+
                 $query             = apply_filters( 'woocommerce_get_filtered_term_product_counts_query', $query );
                 $query             = implode( ' ', $query );
                 $results           = $wpdb->get_results( $query );
