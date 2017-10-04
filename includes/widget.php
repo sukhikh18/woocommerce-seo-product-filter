@@ -3,33 +3,33 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
     const WIDGET_ID = __CLASS__;
 
-	function __construct()
+    function __construct()
     {
-		// Регистрация виджета в базе WP
-		parent::__construct(self::WIDGET_ID, 'Фильтр', array(
+        // Регистрация виджета в базе WP
+        parent::__construct(self::WIDGET_ID, 'Фильтр', array(
             'description' => 'SEO-оптимизированный Фильтр WooCommerce'
         ) );
 
-		add_action( 'before_sidebar', array( $this, 'sidebar_wrapper_start' ), 20 );
-		add_action( 'after_sidebar',  array( $this, 'sidebar_wrapper_end' ), 5 );
-	}
+        add_action( 'before_sidebar', array( $this, 'sidebar_wrapper_start' ), 20 );
+        add_action( 'after_sidebar',  array( $this, 'sidebar_wrapper_end' ), 5 );
+    }
 
-	static function register_widget(){
-		register_widget( self::WIDGET_ID );
-	}
+    static function register_widget(){
+        register_widget( self::WIDGET_ID );
+    }
 
-	function sidebar_wrapper_start(){
+    function sidebar_wrapper_start(){
 
-		echo '<form action="'.get_permalink( wc_get_page_id('shop') ).'" method="get">';
-	}
-	function sidebar_wrapper_end(){
+        echo '<form action="'.get_permalink( wc_get_page_id('shop') ).'" method="get">';
+    }
+    function sidebar_wrapper_end(){
 
-		echo '</form>';
-	}
+        echo '</form>';
+    }
 
-	// Widget FrontEnd
-	public function widget( $args, $instance ) {
-		// title, attribute_id, relation, type..
+    // Widget FrontEnd
+    public function widget( $args, $instance ) {
+        // title, attribute_id, relation, type..
         $option = array();
         $option['show_hidden'] = true;
         $option['show_count']  = true;
@@ -45,79 +45,79 @@ class Seo_Product_Filter_Widget extends WP_Widget {
         $result = array();
 
         $result[] = $args['before_widget'];
-		if( 'filter' === $instance['widget'] ){
-			// set widget title
+        if( 'filter' === $instance['widget'] ){
+            // set widget title
             if( $title = apply_filters( 'widget_title', $instance['title'] ) ) {
                 $result[] = $args['before_title'] . $title . $args['after_title'];
             }
 
-			// empty bugfix
-			if( in_array($instance['attribute_id'], array('product_cat', 'product_tag')) ){
-				$tax_args = isset( $option['show_hidden'] ) ? array('hide_empty' => false) : array();
-				if( wp_count_terms( $instance['attribute_id'], $tax_args ) < 1 ) {
-					return false;
+            // empty bugfix
+            if( in_array($instance['attribute_id'], array('product_cat', 'product_tag')) ){
+                $tax_args = isset( $option['show_hidden'] ) ? array('hide_empty' => false) : array();
+                if( wp_count_terms( $instance['attribute_id'], $tax_args ) < 1 ) {
+                    return false;
                 }
-			}
-
-			$terms = ( ! isset( $option['show_hidden'] ) ) ?
-				self::get_attribute_values( $instance['attribute_id'], 'id', true ) :
-				self::get_attribute_values( $instance['attribute_id'] );
-
-			// is not found
-			if( sizeof( $terms ) < 1 ) {
-				return false;
             }
 
-			$filters = array();
-			foreach ($terms as $term) {
-				$label = ( isset($option['show_count']) ) ? $term->name . ' (' .$term->count. ')' : $term->name;
+            $terms = ( ! isset( $option['show_hidden'] ) ) ?
+                self::get_attribute_values( $instance['attribute_id'], 'id', true ) :
+                self::get_attribute_values( $instance['attribute_id'] );
 
-				$name = $instance['attribute_id'];
-				$name .= '[]';
+            // is not found
+            if( sizeof( $terms ) < 1 ) {
+                return false;
+            }
 
-				$filters[] = array(
-					'id'    => $term->slug,
-					'name'  => $name,
-					'value' => $term->term_id,
-					'label' => $label,
-					'type'  => $instance['type'],
-					);
-			}
+            $filters = array();
+            foreach ($terms as $term) {
+                $label = ( isset($option['show_count']) ) ? $term->name . ' (' .$term->count. ')' : $term->name;
 
-			global $wp_query;
+                $name = $instance['attribute_id'];
+                $name .= '[]';
 
-			if( $tax = $wp_query->get( Seo_Product_Filter_Query::TAX ) ){
-				$active = array( $tax => (int)$wp_query->get( Seo_Product_Filter_Query::TERM ) );
-			}
-			else {
-				$active = $_GET;
-			}
+                $filters[] = array(
+                    'id'    => $term->slug,
+                    'name'  => $name,
+                    'value' => $term->term_id,
+                    'label' => $label,
+                    'type'  => $instance['type'],
+                    );
+            }
+
+            global $wp_query;
+
+            if( $tax = $wp_query->get( Seo_Product_Filter_Query::TAX ) ){
+                $active = array( $tax => (int)$wp_query->get( Seo_Product_Filter_Query::TERM ) );
+            }
+            else {
+                $active = $_GET;
+            }
 
             ob_start();
-			DTFilter\DTForm::render($filters, $active);
+            DTFilter\DTForm::render($filters, $active);
             $result[] = ob_get_clean();
-		}
-		else {
+        }
+        else {
             ob_start();
-			DTFilter\DTForm::render( array(
-				array(
-					'type'  => 'submit',
-					'value' => 'Показать'
-				),
-				array(
-					'type'  => 'hidden',
-					'value' => '1',
-					'name'  => 'filter',
-					)
-			) );
+            DTFilter\DTForm::render( array(
+                array(
+                    'type'  => 'submit',
+                    'value' => 'Показать'
+                ),
+                array(
+                    'type'  => 'hidden',
+                    'value' => '1',
+                    'name'  => 'filter',
+                    )
+            ) );
             $result[] = ob_get_clean();
-		}
-		$result[] = $args['after_widget'];
+        }
+        $result[] = $args['after_widget'];
 
         echo implode("\r\n", $result);
-	}
+    }
 
-	public static function get_attribute_values( $taxonomy = '', $order_by = 'id', $hide_empty = false ) {
+    public static function get_attribute_values( $taxonomy = '', $order_by = 'id', $hide_empty = false ) {
         if ( ! $taxonomy ) return array();
         $re = array();
         if( $hide_empty ) {
@@ -245,106 +245,106 @@ class Seo_Product_Filter_Widget extends WP_Widget {
         }
     }
 
-	// Widget Backend
+    // Widget Backend
     function _widget_settings( $submit=false ){
-		$tax_attributes = array();
-		$form = array();
-		// Созданные таксаномии "Атрибуты" (Без стандартных woocommerce)
-		$attribs = get_object_taxonomies('product', 'objects');
-		$default_product_type = array('product_type', 'product_shipping_class');
-		if(sizeof($attribs) != 0){
-			foreach ($attribs as $attr) {
-				$attr_name = $attr->name;
-				if(! in_array($attr_name, $default_product_type) ){
-					$tax_attributes[$attr_name] = $attr->label;
-				}
-			}
-		}
+        $tax_attributes = array();
+        $form = array();
+        // Созданные таксаномии "Атрибуты" (Без стандартных woocommerce)
+        $attribs = get_object_taxonomies('product', 'objects');
+        $default_product_type = array('product_type', 'product_shipping_class');
+        if(sizeof($attribs) != 0){
+            foreach ($attribs as $attr) {
+                $attr_name = $attr->name;
+                if(! in_array($attr_name, $default_product_type) ){
+                    $tax_attributes[$attr_name] = $attr->label;
+                }
+            }
+        }
 
-		if(! $submit){
-			$form = array(
-				array(
-					'label' => 'Заголовок',
-					'data-title' => 'title',
-					'id'    => $this->get_field_id( 'title' ),
-					'name'  => $this->get_field_name( 'title' ),
-					'type'  => 'text',
-					'class' => 'widefat'
-					),
-				array(
-					'label'   => 'Аттрибут',
-					'data-title' => 'attribute_id',
-					'id'      => $this->get_field_id( 'attribute_id' ),
-					'name'    => $this->get_field_name( 'attribute_id' ),
-					'type'    =>'select',
-					'options' => $tax_attributes,
-					'class'   =>'widefat'
-					),
-				array(
-					'label'   => 'Логика',
-					'data-title' => 'relation',
-					'id'      => $this->get_field_id( 'relation' ),
-					'name'    => $this->get_field_name( 'relation' ),
-					'type'    =>'select',
-					'options' => array('OR' => __('OR'), 'AND' => __('AND') ),
-					'class'   =>'widefat'
-					),
-				// array(
-				// 	'label'   => 'Тип фильтра',
-				// 	'data-title' => 'type',
-				// 	'id'      => $this->get_field_id( 'type' ),
-				// 	'name'    => $this->get_field_name( 'type' ),
-				// 	'type'    =>'select',
-				// 	'options' => array('select' => 'Выбор', 'checkbox' => 'Чекбокс', 'radio' => 'Радио-кнопки'),
-				// 	'class'   =>'widefat'
-				// 	),
-				);
-		} else {
-			$form[] = array(
-				'id'    => $this->get_field_id( 'title' ),
-				'name'  => $this->get_field_name( 'title' ),
-				'type'  => 'hidden',
-				'class' => 'widefat',
-				'value' => 'Кнопка "Показать"'
-				);
-		}
+        if(! $submit){
+            $form = array(
+                array(
+                    'label' => 'Заголовок',
+                    'data-title' => 'title',
+                    'id'    => $this->get_field_id( 'title' ),
+                    'name'  => $this->get_field_name( 'title' ),
+                    'type'  => 'text',
+                    'class' => 'widefat'
+                    ),
+                array(
+                    'label'   => 'Аттрибут',
+                    'data-title' => 'attribute_id',
+                    'id'      => $this->get_field_id( 'attribute_id' ),
+                    'name'    => $this->get_field_name( 'attribute_id' ),
+                    'type'    =>'select',
+                    'options' => $tax_attributes,
+                    'class'   =>'widefat'
+                    ),
+                array(
+                    'label'   => 'Логика',
+                    'data-title' => 'relation',
+                    'id'      => $this->get_field_id( 'relation' ),
+                    'name'    => $this->get_field_name( 'relation' ),
+                    'type'    =>'select',
+                    'options' => array('OR' => __('OR'), 'AND' => __('AND') ),
+                    'class'   =>'widefat'
+                    ),
+                // array(
+                //  'label'   => 'Тип фильтра',
+                //  'data-title' => 'type',
+                //  'id'      => $this->get_field_id( 'type' ),
+                //  'name'    => $this->get_field_name( 'type' ),
+                //  'type'    =>'select',
+                //  'options' => array('select' => 'Выбор', 'checkbox' => 'Чекбокс', 'radio' => 'Радио-кнопки'),
+                //  'class'   =>'widefat'
+                //  ),
+                );
+        } else {
+            $form[] = array(
+                'id'    => $this->get_field_id( 'title' ),
+                'name'  => $this->get_field_name( 'title' ),
+                'type'  => 'hidden',
+                'class' => 'widefat',
+                'value' => 'Кнопка "Показать"'
+                );
+        }
 
-		$form[] = array(
-			'label'   => 'Тип виджета',
-			'data-title' => 'widget',
-			'id'      => $this->get_field_id( 'widget' ),
-			'name'    => $this->get_field_name( 'widget' ),
-			'type'    =>'select',
-			'options' => array('filter' => 'Фильтр', 'submit' => 'Кнопка фильтра продуктов'),
-			'class'  =>'widefat',
-			'before' => $submit ? '<strong>' : '<hr><strong>',
-			'after'  => '</strong>'
-			);
+        $form[] = array(
+            'label'   => 'Тип виджета',
+            'data-title' => 'widget',
+            'id'      => $this->get_field_id( 'widget' ),
+            'name'    => $this->get_field_name( 'widget' ),
+            'type'    =>'select',
+            'options' => array('filter' => 'Фильтр', 'submit' => 'Кнопка фильтра продуктов'),
+            'class'  =>'widefat',
+            'before' => $submit ? '<strong>' : '<hr><strong>',
+            'after'  => '</strong>'
+            );
 
-		return $form;
-	}
-	public function form( $instance ) {
-		$form_instance = array();
-		foreach ($instance as $key => $value) {
-			$id = $this->get_field_name( $key );
-			$form_instance[$id] = $value;
-		}
-		$submit = (end($form_instance) == 'submit') ? true : false;
-		DTFilter\DTForm::render($this->_widget_settings($submit), $form_instance);
-	}
-	public function update( $new_instance, $old_instance ) {
-		$instance = array();
-		if($new_instance['widget'] != 'submit'){
-			foreach ($this->_widget_settings() as $value) {
-				$id = $value['data-title'];
-				if( isset( $new_instance[$id] ) )
-					$instance[$id] = $new_instance[$id];
-			}
-		} else {
-			$instance['widget'] = 'submit';
-		}
+        return $form;
+    }
+    public function form( $instance ) {
+        $form_instance = array();
+        foreach ($instance as $key => $value) {
+            $id = $this->get_field_name( $key );
+            $form_instance[$id] = $value;
+        }
+        $submit = (end($form_instance) == 'submit') ? true : false;
+        DTFilter\DTForm::render($this->_widget_settings($submit), $form_instance);
+    }
+    public function update( $new_instance, $old_instance ) {
+        $instance = array();
+        if($new_instance['widget'] != 'submit'){
+            foreach ($this->_widget_settings() as $value) {
+                $id = $value['data-title'];
+                if( isset( $new_instance[$id] ) )
+                    $instance[$id] = $new_instance[$id];
+            }
+        } else {
+            $instance['widget'] = 'submit';
+        }
 
-		// file_put_contents( DTF_PLUGIN_PATH . 'debug.log', print_r($new_instance, 1) );
-		return $instance;
-	}
+        // file_put_contents( DTF_PLUGIN_PATH . 'debug.log', print_r($new_instance, 1) );
+        return $instance;
+    }
 }
