@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) )
   exit; // disable direct access
 
 define('SEO_FILTER_MARK', 'seo_filter');
+define('SPF_META', 'spf_term_meta');
 
 // $plugin_url = trailingslashit(plugins_url(basename( __DIR__ )));
 add_action( 'plugins_loaded', 'initialize_seo_product_filter_plugin' );

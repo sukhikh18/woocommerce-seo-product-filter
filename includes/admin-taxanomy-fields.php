@@ -58,7 +58,7 @@ function seo_filter_taxanomy_actions(){
 function seo_filter_taxanomy_fields( $taxonomy, $is_table = false ) {
     $active = array();
     if( isset($_GET['tag_ID']) ) {
-        $active = get_term_meta( $_GET['tag_ID'], Seo_Product_Filter::OPTION, true );
+        $active = get_term_meta( $_GET['tag_ID'], SPF_META, true );
     }
 
     DTFilter\DTForm::render(
@@ -86,6 +86,6 @@ function save_seo_filter_taxanomy_fields( $term_id ){
         }
     }
 
-    update_term_meta( $term_id, Seo_Product_Filter::OPTION, $result );
+    update_term_meta( $term_id, SPF_META, $result );
     //file_put_contents(__DIR__ . '/log.err', print_r($result, 1) );
 }

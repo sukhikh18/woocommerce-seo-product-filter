@@ -172,9 +172,9 @@ class Seo_Product_Filter_Query2 {
 
     static function set_seo_field_values( $query )
     {
-        if( ! self::is_single_term() ) return false;
+        if( self::$terms_count !== 1 ) return false;
 
-        $settings = self::$seo_field_values = get_term_meta( (int)self::$tax_query[0]['terms'][0], DTF_OPTION_NAME, true );
+        $settings = self::$seo_field_values = get_term_meta( (int)self::$tax_query[0]['terms'][0], SPF_META, true );
 
         if( isset( $settings['title']) )
             add_filter( 'wpseo_title', function(){
@@ -196,10 +196,10 @@ class Seo_Product_Filter_Query2 {
         //      return esc_attr( SEO_Filter::$seo_field_values['h1'] );
         //  }, 100);
 
-        add_action( 'woocommerce_archive_description', array(__CLASS__, 'archive_description'), 100 );
+        add_action( 'woocommerce_archive_description', array(__CLASS__, '_archive_description'), 100 );
     }
 
-    static function archive_description()
+    static function _archive_description()
     {
         echo term_description( (int) current( self::$tax_query[0]['terms'] ), self::$tax_query[0]['taxonomy'] );
     }
