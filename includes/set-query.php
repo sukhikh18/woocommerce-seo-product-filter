@@ -6,6 +6,7 @@ class Seo_Product_Filter_Query {
 
     static public $shop_slug = 'shop';
     static private $tax_query = array();
+    static private $seo_field_values = array();
 
     static public $terms_count = 0;
 
@@ -165,10 +166,6 @@ class Seo_Product_Filter_Query {
             $query->set( 'tax_query', self::$tax_query );
         }
     }
-}
-
-class Seo_Product_Filter_Query2 {
-    static private $seo_field_values = array();
 
     static function set_seo_field_values( $query )
     {
@@ -178,22 +175,22 @@ class Seo_Product_Filter_Query2 {
 
         if( isset( $settings['title']) )
             add_filter( 'wpseo_title', function(){
-                return esc_attr( SEO_Filter::$seo_field_values['title'] );
+                return esc_attr( Seo_Product_Filter_Query::$seo_field_values['title'] );
             }, 100 );
 
         if( isset( $settings['description']) )
             add_filter( 'wpseo_metadesc', function(){
-                return esc_attr( SEO_Filter::$seo_field_values['description'] );
+                return esc_attr( Seo_Product_Filter_Query::$seo_field_values['description'] );
             }, 100 );
 
         if( isset( $settings['keywords']) )
             add_filter( 'wpseo_metakey', function(){
-                return esc_attr( SEO_Filter::$seo_field_values['keywords'] );
+                return esc_attr( Seo_Product_Filter_Query::$seo_field_values['keywords'] );
             }, 100 );
 
         // if( isset( $settings['h1']) )
         //  add_filter( 'woocommerce_page_title', function(){
-        //      return esc_attr( SEO_Filter::$seo_field_values['h1'] );
+        //      return esc_attr( Seo_Product_Filter_Query::$seo_field_values['h1'] );
         //  }, 100);
 
         add_action( 'woocommerce_archive_description', array(__CLASS__, '_archive_description'), 100 );

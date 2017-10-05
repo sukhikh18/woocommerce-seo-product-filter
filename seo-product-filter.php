@@ -35,7 +35,7 @@ function initialize_seo_product_filter_plugin() {
     add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', 'set_tax_query') );
     add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', '_redirect') );
     add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', 'set_query') );
-    // add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', 'set_seo_field_values') );
+    add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', 'set_seo_field_values') );
 
     add_action( 'widgets_init', array( 'Seo_Product_Filter_Widget', 'register_widget' ) );
 }
