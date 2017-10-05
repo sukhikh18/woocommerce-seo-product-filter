@@ -31,8 +31,8 @@ class Seo_Product_Filter_Widget extends WP_Widget {
     public function widget( $args, $instance ) {
         // title, attribute_id, relation, type..
         $option = array();
-        $option['show_hidden'] = true;
-        $option['show_count']  = true;
+        $option['show_hidden'] = false;
+        $option['show_count']  = false;
 
         $instance = wp_parse_args( $instance, array(
             'title'  => '',
@@ -74,7 +74,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
 
                 $filters[] = array(
-                    'id'    => $term->slug,
+                    'id'    => $instance['attribute_id'] . '-' . $term->slug,
                     'name'  => apply_filters( 'parse_tax_name', $instance['attribute_id'] ) . '[]',
                     'value' => $term->term_id,
                     'label' => $label,
