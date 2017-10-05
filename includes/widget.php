@@ -72,12 +72,10 @@ class Seo_Product_Filter_Widget extends WP_Widget {
             foreach ($terms as $term) {
                 $label = ( isset($option['show_count']) ) ? $term->name . ' (' .$term->count. ')' : $term->name;
 
-                $name = $instance['attribute_id'];
-                $name .= '[]';
 
                 $filters[] = array(
                     'id'    => $term->slug,
-                    'name'  => $name,
+                    'name'  => apply_filters( 'parse_tax_name', $instance['attribute_id'] ) . '[]',
                     'value' => $term->term_id,
                     'label' => $label,
                     'type'  => $instance['type'],

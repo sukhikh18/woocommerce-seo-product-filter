@@ -29,6 +29,39 @@ function initialize_seo_product_filter_plugin() {
     require_once( $path . '/includes/set-query.php' );
     require_once( $path . '/includes/widget.php' );
 
+    add_action( 'init', array('Seo_Product_Filter_Query', 'add_routes') );
+
+    add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', 'set_tax_query') );
+    add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', '_redirect') );
+    add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', 'set_query') );
+    // add_action( 'pre_get_posts', array('Seo_Product_Filter_Query', 'set_seo_field_values') );
+
     add_action( 'widgets_init', array( 'Seo_Product_Filter_Widget', 'register_widget' ) );
-    new Seo_Product_Filter_Query();
+}
+
+/**
+ * Добавляет таксаномиям s на конце во избежание конфликтов с WP Seo от Yoast
+ */
+add_filter( 'parse_tax_name', 'spf_parse_tax_name', 10, 2 );
+function spf_parse_tax_name( $taxname, $is_return = false ) {
+    $tax = strtolower($taxname);
+    // if( strpos( $tax, 'pa_') === 0 ){
+    //     if( $is_return ) {
+    //         $tax = str_replace('pa_', '', $tax);
+    //     }
+    //     else {
+    //         $tax = 'pa_' . $tax;
+    //     }
+    // }
+    // else
+    if( strpos( $tax, 'pa_') !== 0  ) {
+        if( $is_return ) {
+            $tax = substr($tax, 0, -1);
+        }
+        else {
+            $tax .= 's';
+        }
+    }
+
+    return $tax;
 }
