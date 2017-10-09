@@ -23,6 +23,13 @@ class Seo_Product_Filter_Widget extends WP_Widget {
         echo '<form action="'.get_permalink( wc_get_page_id('shop') ).'" method="get">';
     }
     function sidebar_wrapper_end(){
+        $term_slug = '';
+        $queried = get_queried_object();
+        if( $queried instanceof WP_Term && $queried->taxonomy == 'product_cat' ) {
+            $term_slug = $queried->slug;
+        }
+
+        echo '<input type="hidden" class="hidden hidden-xs-up" name="product_cat" value="'.$term_slug.'">';
 
         echo '</form>';
     }
@@ -342,7 +349,10 @@ class Seo_Product_Filter_Widget extends WP_Widget {
             $instance['widget'] = 'submit';
         }
 
-        // file_put_contents( DTF_PLUGIN_PATH . 'debug.log', print_r($new_instance, 1) );
+        if( $old_instance !== $new_instance ) {
+            flush_rewrite_rules();
+        }
+
         return $instance;
     }
 }
