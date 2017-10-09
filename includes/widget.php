@@ -53,13 +53,13 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
             // empty bugfix
             if( in_array($instance['attribute_id'], array('product_cat', 'product_tag')) ){
-                $tax_args = isset( $option['show_hidden'] ) ? array('hide_empty' => false) : array();
+                $tax_args = $option['show_hidden'] ? array('hide_empty' => false) : array();
                 if( wp_count_terms( $instance['attribute_id'], $tax_args ) < 1 ) {
                     return false;
                 }
             }
 
-            $terms = ( ! isset( $option['show_hidden'] ) ) ?
+            $terms = ( ! $option['show_hidden'] ) ?
                 self::get_attribute_values( $instance['attribute_id'], 'id', true ) :
                 self::get_attribute_values( $instance['attribute_id'] );
 
@@ -70,7 +70,7 @@ class Seo_Product_Filter_Widget extends WP_Widget {
 
             $filters = array();
             foreach ($terms as $term) {
-                $label = ( isset($option['show_count']) ) ? $term->name . ' (' .$term->count. ')' : $term->name;
+                $label = ( $option['show_count'] ) ? $term->name . ' (' .$term->count. ')' : $term->name;
 
 
                 $filters[] = array(

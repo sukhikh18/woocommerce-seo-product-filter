@@ -7,7 +7,7 @@ Author: NikolayS93
 Author URI: http://vk.com/nikolay_s93
 Text Domain: new-plugin
 Domain Path: /languages/
-Version: 1.1b
+Version: 1.2.1
 */
 
 if ( ! defined( 'ABSPATH' ) )
